@@ -12,7 +12,7 @@ Content-Type: application/json
 
 ###
 
-GET http://localhost:3000/movies/2/
+GET http://localhost:3000/movies/10/
 ###
 
 PUT http://localhost:3000/movies/:movieId/

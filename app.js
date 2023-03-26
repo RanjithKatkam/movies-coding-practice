@@ -10,6 +10,7 @@ app.use(express.json());
 
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
+
 let db = null;
 
 const initializeDbAndServer = async () => {
@@ -28,16 +29,24 @@ const initializeDbAndServer = async () => {
 };
 
 initializeDbAndServer();
-module.exports = app.express();
+
+module.exports = app;
 
 // Get Movies API
 app.get("/movies/", async (request, response) => {
   const getMoviesQuery = `
     SELECT movie_name
-    FROM Movie
+    FROM movie
     `;
   const dbResponse = await db.all(getMoviesQuery);
-  response.send(dbResponse);
+  const convertDbObjectToResponseObject = (dbObject) => {
+    return {
+      movieName: dbObject.movie_name,
+    };
+  };
+  response.send(
+    dbResponse.map((eachPlayer) => convertDbObjectToResponseObject(eachPlayer))
+  );
 });
 
 //Post Movie API
@@ -60,11 +69,19 @@ app.post("/movies/", async (request, response) => {
 app.get("/movies/:movieId/", async (request, response) => {
   const { movieId } = request.params;
   const getMovieQuery = `
-    SELECT movie_name
+    SELECT *
     FROM movie
     WHERE movie_id = ${movieId}`;
-  const dbResponse = await db.get(getMovieQuery);
-  response.send(dbResponse);
+  const movieDetailsRes = await db.get(getMovieQuery);
+  const convertDatabaseToResponse = (dbObject) => {
+    return {
+      movie_id: dbObject.movie_id,
+      directorId: dbObject.director_id,
+      movieName: dbObject.movie_name,
+      leadActor: dbObject.lead_actor,
+    };
+  };
+  response.send(convertDatabaseToResponse(movieDetailsRes));
 });
 
 //Update Movie API
@@ -101,7 +118,15 @@ app.get("/directors/", async (request, response) => {
     SELECT *
     FROM director`;
   const dbResponse = await db.all(getDirectorQuery);
-  response.send(dbResponse);
+  const convertDatabaseToResponse = (dbObject) => {
+    return {
+      directorId: dbObject.director_id,
+      directorName: dbObject.director_name,
+    };
+  };
+  response.send(
+    dbResponse.map((eachItem) => convertDatabaseToResponse(eachItem))
+  );
 });
 
 // Get Movies by Director API
@@ -112,5 +137,12 @@ app.get("/directors/:directorId/movies/", async (request, response) => {
     FROM movie
     WHERE director_id = ${directorId}`;
   const dbResponse = await db.all(getMoviesQuery);
-  response.send(dbResponse);
+  const convertDatabaseToResponse = (dbObject) => {
+    return {
+      movieName: dbObject.movie_name,
+    };
+  };
+  response.send(
+    dbResponse.map((eachItem) => convertDatabaseToResponse(eachItem))
+  );
 });
